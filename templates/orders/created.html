@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Order Confirmed | SwiftCart{% endblock %}
+{% block content %}
+<section class="success-section">
+<div class="success-card">
+    <div class="success-icon"><i class="bi bi-check-lg"></i></div>
+    <span class="section-kicker">Order confirmed</span>
+    <h1>Thank you, {{ order.full_name }}!</h1>
+    <p>Your order <strong>#{{ order.id }}</strong> has been placed successfully. A confirmation email has been sent to <strong>{{ order.email }}</strong>.</p>
+    <div class="tracking-number-card"><span>Tracking ID</span><strong>{{ order.tracking_number }}</strong><small>Estimated delivery {{ order.estimated_delivery|date:"d M Y" }}</small></div>
+    <div class="success-summary"><span>Total paid</span><strong>₹{{ order.total }}</strong><span>Payment</span><strong>{{ order.get_payment_method_display }}</strong></div>
+    <div class="hero-actions justify-content-center">
+        <a class="primary-cta" href="{% url 'orders:order_detail' order.id %}">Track order</a>
+        <a class="secondary-cta" href="{% url 'orders:invoice_pdf' order.id %}"><i class="bi bi-file-earmark-pdf"></i> Invoice</a>
+    </div>
+</div>
+</section>
+{% endblock %}

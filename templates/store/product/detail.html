@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} | SwiftCart{% endblock %}
+{% block content %}
+<section class="section-space">
+<div class="container">
+    <nav class="breadcrumb-premium">
+        <a href="{% url 'store:home' %}">Home</a><i class="bi bi-chevron-right"></i>
+        <a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a><i class="bi bi-chevron-right"></i>
+        <span>{{ product.name }}</span>
+    </nav>
+
+    <div class="product-detail-grid">
+        <div class="product-detail-media">
+            {% if product.badge %}<span class="product-badge">{{ product.badge }}</span>{% endif %}
+            {% if product.image_url %}<img src="{{ product.image_url }}" alt="{{ product.name }}">{% else %}<div class="image-fallback">📦</div>{% endif %}
+        </div>
+        <div class="product-detail-copy">
+            <span class="product-category">{{ product.category.name }}</span>
+            <h1>{{ product.name }}</h1>
+            <div class="detail-rating"><span>★</span><strong>{{ product.average_rating }}</strong><a href="#reviews">{{ product.review_count }} reviews</a></div>
+            <p class="detail-lead">{{ product.short_description }}</p>
+            <div class="detail-price"><strong>₹{{ product.price }}</strong>{% if product.original_price %}<del>₹{{ product.original_price }}</del>{% endif %}{% if product.discount_percentage %}<span>Save {{ product.discount_percentage }}%</span>{% endif %}</div>
+            <p class="stock-copy {% if product.in_stock %}in-stock{% else %}out-stock{% endif %}"><i class="bi {% if product.in_stock %}bi-check-circle-fill{% else %}bi-x-circle-fill{% endif %}"></i>{% if product.in_stock %}In stock — {{ product.stock }} available{% else %}Currently unavailable{% endif %}</p>
+            <p class="detail-description">{{ product.description }}</p>
+
+            {% if product.in_stock %}
+            <form method="post" action="{% url 'cart:cart_add' product.id %}" class="purchase-row">
+                {% csrf_token %}
+                <div class="quantity-field"><label>Quantity</label>{{ cart_product_form.quantity }}{{ cart_product_form.override }}</div>
+                <button class="add-cart-button"><i class="bi bi-bag-plus"></i> Add to cart</button>
+            </form>
+            {% endif %}
+
+            {% if user.is_authenticated %}
+            <form method="post" action="{% url 'store:toggle_wishlist' product.id %}" class="js-wishlist-form" data-product-id="{{ product.id }}">
+                {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+                <button class="wishlist-wide-button {% if in_wishlist %}active{% endif %}" type="submit" aria-pressed="{% if in_wishlist %}true{% else %}false{% endif %}">
+                    <i class="bi {% if in_wishlist %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                    <span data-wishlist-label>{% if in_wishlist %}Remove from wishlist{% else %}Add to wishlist{% endif %}</span>
+                </button>
+            </form>
+            {% else %}
+            <a class="wishlist-wide-button text-decoration-none" href="{% url 'login' %}?next={{ request.path }}"><i class="bi bi-heart"></i> Login to save</a>
+            {% endif %}
+
+            <div class="mini-benefits">
+                <div><i class="bi bi-shield-check"></i><span><strong>Secure checkout</strong><small>Protected account flow</small></span></div>
+                <div><i class="bi bi-box-seam"></i><span><strong>Live order tracking</strong><small>Updates at every stage</small></span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="reviews-section" id="reviews">
+        <div class="reviews-heading">
+            <div><span class="section-kicker">Customer feedback</span><h2>Ratings & reviews</h2></div>
+            <div class="big-rating"><strong>{{ product.average_rating }}</strong><span>★</span><small>{{ product.review_count }} reviews</small></div>
+        </div>
+        <div class="row g-5">
+            <div class="col-lg-7">
+                {% for review in product.reviews.all %}
+                <article class="review-card">
+                    <div class="review-meta">
+                        <div class="avatar">{{ review.user.username|first|upper }}</div>
+                        <div><strong>{{ review.user.username }}</strong><small>{{ review.created_at|date:"d M Y" }}{% if review.verified_purchase %} · <span class="verified-review"><i class="bi bi-patch-check-fill"></i> Verified purchase</span>{% endif %}</small></div>
+                        <span>{{ review.rating }} ★</span>
+                    </div>
+                    <h3>{{ review.title }}</h3><p>{{ review.comment }}</p>
+                </article>
+                {% empty %}
+                <div class="empty-review"><i class="bi bi-chat-square-heart"></i><p>No reviews yet. Be the first reviewer.</p></div>
+                {% endfor %}
+            </div>
+            <div class="col-lg-5">
+                <div class="review-form-card">
+                    <div class="review-form-heading"><span class="review-form-icon"><i class="bi bi-patch-check"></i></span><div><h3>Write a review</h3><p class="review-form-intro">Reviews are limited to delivered, verified purchases.</p></div></div>
+                    {% if can_review %}
+                    <form method="post" action="{% url 'store:add_review' product.id %}">{% csrf_token %}{{ review_form.as_p }}<button>Publish review</button></form>
+                    {% elif user_has_reviewed %}
+                    <div class="review-access-state success"><i class="bi bi-check-circle-fill"></i><div><strong>Review submitted</strong><p>You have already reviewed this product.</p></div></div>
+                    {% elif user.is_authenticated %}
+                    <div class="review-access-state locked"><i class="bi bi-lock-fill"></i><div><strong>Available after delivery</strong><p>Purchase this product and wait until the order status is Delivered. The review form will unlock automatically.</p><a href="{% url 'orders:order_history' %}">Check your orders <i class="bi bi-arrow-right"></i></a></div></div>
+                    {% else %}
+                    <div class="review-access-state locked"><i class="bi bi-person-lock"></i><div><strong>Login required</strong><p>Log in to check whether your delivered purchase is eligible.</p><a href="{% url 'login' %}?next={{ request.path }}">Log in <i class="bi bi-arrow-right"></i></a></div></div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if related_products %}
+    <div class="related-products">
+        <div class="section-heading"><div><span class="section-kicker">You may also like</span><h2>Related products</h2></div></div>
+        <div class="row g-4">{% for product in related_products %}<div class="col-sm-6 col-lg-3">{% include "store/_product_card.html" %}</div>{% endfor %}</div>
+    </div>
+    {% endif %}
+</div>
+</section>
+
+{% if recently_viewed %}
+<section class="section-space soft-section">
+    <div class="container">
+        <div class="section-heading"><div><span class="section-kicker">Continue shopping</span><h2>Recently viewed</h2></div></div>
+        <div class="row g-4">{% for product in recently_viewed %}<div class="col-sm-6 col-lg-3">{% include "store/_product_card.html" with product=product %}</div>{% endfor %}</div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

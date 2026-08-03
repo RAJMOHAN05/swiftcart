@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}My Orders | SwiftCart{% endblock %}
+{% block content %}
+<section class="page-hero compact"><div class="container"><span class="section-kicker">Purchase history</span><h1>My orders</h1><p>Open any order to view products and delivery progress.</p></div></section>
+<section class="section-space">
+<div class="container order-list">
+{% for order in orders %}
+<a class="order-list-card" href="{% url 'orders:order_detail' order.id %}">
+    <div><small>Order / Tracking</small><strong>#{{ order.id }}</strong><small>{{ order.tracking_number }}</small></div>
+    <div><small>Date</small><strong>{{ order.created_at|date:"d M Y" }}</strong></div>
+    <div><small>Status</small><span class="status-pill status-{{ order.status }}">{{ order.get_status_display }}</span></div>
+    <div><small>Total</small><strong>₹{{ order.total }}</strong></div>
+    <i class="bi bi-arrow-right"></i>
+</a>
+{% empty %}
+<div class="empty-state"><i class="bi bi-box-seam"></i><h2>No orders yet</h2><p>Your future orders will appear here.</p><a href="{% url 'store:product_list' %}">Shop now</a></div>
+{% endfor %}
+</div>
+</section>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Shop | SwiftCart{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/catalogue-v2.css' %}?v=20260731.6">{% endblock %}
+{% block content %}
+<section class="page-hero compact">
+    <div class="container">
+        <span class="section-kicker">Smart product discovery</span>
+        <h1>{% if category %}{{ category.name }}{% elif query %}Search results{% else %}Shop all products{% endif %}</h1>
+        <p>Search, compare ratings and refine products by price, category and availability.</p>
+    </div>
+</section>
+
+<section class="section-space catalogue-section">
+<div class="container">
+    <button class="mobile-filter-toggle" id="mobileFilterToggle" type="button" aria-controls="catalogueFilterPanel" aria-expanded="false"><span><i class="bi bi-sliders"></i> Filters & sorting</span><i class="bi bi-chevron-down"></i></button>
+    <div class="catalogue-layout">
+        <aside class="filter-panel" id="catalogueFilterPanel">
+            <div class="filter-panel-heading">
+                <div><span class="section-kicker">Refine results</span><h2>Filters</h2></div>
+                <a href="{% url 'store:product_list' %}">Clear all</a>
+            </div>
+            <form method="get" class="advanced-filter-form">
+                <label>
+                    <span>Search</span>
+                    <div class="filter-input-icon"><i class="bi bi-search"></i><input name="q" value="{{ query }}" placeholder="Product or category"></div>
+                </label>
+                <label>
+                    <span>Category</span>
+                    <select name="category">
+                        <option value="">All categories</option>
+                        {% for item in categories %}
+                        <option value="{{ item.slug }}" {% if selected_category == item.slug %}selected{% endif %}>{{ item.name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <div class="price-filter-grid">
+                    <label><span>Minimum price</span><input type="number" name="min_price" value="{{ min_price }}" min="0" step="1" placeholder="₹ 0"></label>
+                    <label><span>Maximum price</span><input type="number" name="max_price" value="{{ max_price }}" min="0" step="1" placeholder="₹ 5000"></label>
+                </div>
+                <label>
+                    <span>Customer rating</span>
+                    <select name="rating">
+                        <option value="">Any rating</option>
+                        <option value="4" {% if min_rating == "4" %}selected{% endif %}>4★ & above</option>
+                        <option value="3" {% if min_rating == "3" %}selected{% endif %}>3★ & above</option>
+                        <option value="2" {% if min_rating == "2" %}selected{% endif %}>2★ & above</option>
+                    </select>
+                </label>
+                <label class="filter-check"><input type="checkbox" name="in_stock" value="1" {% if in_stock %}checked{% endif %}><span><strong>In-stock only</strong><small>Ready to dispatch</small></span></label>
+                <label>
+                    <span>Sort results</span>
+                    <select name="sort">
+                        <option value="newest" {% if sort == "newest" %}selected{% endif %}>Newest</option>
+                        <option value="popular" {% if sort == "popular" %}selected{% endif %}>Most popular</option>
+                        <option value="rating" {% if sort == "rating" %}selected{% endif %}>Highest rated</option>
+                        <option value="price_low" {% if sort == "price_low" %}selected{% endif %}>Price: low to high</option>
+                        <option value="price_high" {% if sort == "price_high" %}selected{% endif %}>Price: high to low</option>
+                        <option value="name" {% if sort == "name" %}selected{% endif %}>Name A–Z</option>
+                    </select>
+                </label>
+                <button class="filter-submit" type="submit"><i class="bi bi-sliders"></i> Apply filters</button>
+            </form>
+        </aside>
+
+        <div class="catalogue-results">
+            <div class="shop-toolbar">
+                <div>
+                    <strong>{{ page_obj.paginator.count }} products</strong>
+                    {% if query %}<span>for “{{ query }}”</span>{% else %}<span>selected for you</span>{% endif %}
+                </div>
+                <div class="filter-chips">
+                    <a class="{% if not category %}active{% endif %}" href="{% url 'store:product_list' %}">All</a>
+                    {% for item in categories|slice:":5" %}
+                    <a class="{% if category.id == item.id %}active{% endif %}" href="{{ item.get_absolute_url }}">{{ item.icon }} {{ item.name }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="row g-4">
+                {% for product in products %}
+                <div class="col-sm-6 col-xl-4">{% include "store/_product_card.html" %}</div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="bi bi-search"></i>
+                    <h2>No matching products</h2>
+                    <p>Try a wider price range, lower rating or another keyword.</p>
+                    <a href="{% url 'store:product_list' %}">Reset filters</a>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if page_obj.paginator.num_pages > 1 %}
+            <nav class="premium-pagination" aria-label="Product pages">
+                {% if page_obj.has_previous %}<a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}"><i class="bi bi-arrow-left"></i> Previous</a>{% endif %}
+                <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}<a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next <i class="bi bi-arrow-right"></i></a>{% endif %}
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+</section>
+{% endblock %}

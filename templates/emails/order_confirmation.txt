@@ -1,0 +1,12 @@
+Hi {{ order.full_name }},
+
+Thank you for your SwiftCart order #{{ order.id }}.
+
+Total: INR {{ order.total }}
+Payment: {{ order.get_payment_method_display }}
+Tracking ID: {{ order.tracking_number }}
+Estimated delivery: {{ order.estimated_delivery|date:"d M Y" }}
+
+Track your order: {{ order_url }}
+
+SwiftCart

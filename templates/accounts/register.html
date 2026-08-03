@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Create Account | SwiftCart{% endblock %}
+{% block content %}
+<section class="auth-section">
+    <div class="auth-shell">
+        <div class="auth-copy">
+            <span class="eyebrow">Join SwiftCart</span>
+            <h1>Premium shopping starts here.</h1>
+            <p>Create an account to save your wishlist, review products and track every order.</p>
+            <div class="auth-points"><span><i class="bi bi-check-circle"></i> Wishlist</span><span><i class="bi bi-check-circle"></i> Order tracking</span><span><i class="bi bi-check-circle"></i> Reviews</span></div>
+        </div>
+        <div class="auth-card">
+            <h2>Create account</h2>
+            <p>Enter your details to get started.</p>
+            <form method="post">{% csrf_token %}{{ form.as_p }}<button>Create account</button></form>
+            <small>Already registered? <a href="{% url 'login' %}">Log in</a></small>
+        </div>
+    </div>
+</section>
+{% endblock %}

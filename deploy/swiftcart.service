@@ -1,0 +1,23 @@
+[Unit]
+Description=SwiftCart Django application
+After=network.target postgresql.service
+
+[Service]
+Type=notify
+User=swiftcart
+Group=www-data
+WorkingDirectory=/srv/swiftcart
+EnvironmentFile=/srv/swiftcart/.env
+ExecStart=/srv/swiftcart/.venv/bin/gunicorn ecommerce.wsgi:application --bind 127.0.0.1:8000 --workers 3 --timeout 60 --access-logfile -
+ExecReload=/bin/kill -s HUP $MAINPID
+KillSignal=SIGQUIT
+TimeoutStopSec=20
+PrivateTmp=true
+ProtectSystem=full
+NoNewPrivileges=true
+ReadWritePaths=/srv/swiftcart
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Your Cart | SwiftCart{% endblock %}
+{% block content %}
+<section class="page-hero compact"><div class="container"><span class="section-kicker">Almost yours</span><h1>Shopping cart</h1><p>Review products, apply a coupon and continue to checkout.</p></div></section>
+
+<section class="section-space">
+<div class="container">
+{% if cart|length %}
+<div class="cart-layout">
+    <div class="cart-items">
+        {% for item in cart %}
+        <div class="cart-item">
+            <a href="{{ item.product.get_absolute_url }}" class="cart-thumb">
+                {% if item.product.image_url %}<img src="{{ item.product.image_url }}" alt="{{ item.product.name }}">{% else %}<span>📦</span>{% endif %}
+            </a>
+            <div class="cart-info">
+                <span>{{ item.product.category.name }}</span>
+                <h2><a href="{{ item.product.get_absolute_url }}">{{ item.product.name }}</a></h2>
+                <p>₹{{ item.price }} each</p>
+            </div>
+            <form method="post" action="{% url 'cart:cart_add' item.product.id %}" class="cart-quantity">
+                {% csrf_token %}
+                {{ item.update_quantity_form.quantity }}
+                {{ item.update_quantity_form.override }}
+                <button>Update</button>
+            </form>
+            <strong class="cart-line-total">₹{{ item.total_price }}</strong>
+            <form method="post" action="{% url 'cart:cart_remove' item.product.id %}">
+                {% csrf_token %}
+                <button class="remove-button" aria-label="Remove"><i class="bi bi-trash"></i></button>
+            </form>
+        </div>
+        {% endfor %}
+        <a class="continue-link" href="{% url 'store:product_list' %}"><i class="bi bi-arrow-left"></i> Continue shopping</a>
+    </div>
+
+    <aside class="order-summary">
+        <h2>Order summary</h2>
+        <form method="post" action="{% url 'cart:coupon_apply' %}" class="coupon-form">
+            {% csrf_token %}
+            {{ coupon_form.code }}
+            <button>Apply</button>
+        </form>
+        {% if cart.coupon %}
+            <div class="coupon-success"><i class="bi bi-tag-fill"></i> {{ cart.coupon.code }} — {{ cart.coupon.discount }}% off</div>
+        {% endif %}
+        <div class="summary-row"><span>Subtotal</span><strong>₹{{ cart.get_subtotal|floatformat:2 }}</strong></div>
+        <div class="summary-row"><span>Discount</span><strong class="discount-text">− ₹{{ cart.get_discount|floatformat:2 }}</strong></div>
+        <div class="summary-row"><span>Delivery</span><strong>Free</strong></div>
+        <div class="summary-total"><span>Total</span><strong>₹{{ cart.get_total_price|floatformat:2 }}</strong></div>
+        <a class="checkout-button" href="{% url 'orders:order_create' %}">Secure checkout <i class="bi bi-lock"></i></a>
+        <p class="secure-copy"><i class="bi bi-shield-check"></i> Your checkout is protected.</p>
+    </aside>
+</div>
+{% else %}
+<div class="empty-state"><i class="bi bi-bag"></i><h2>Your cart is empty</h2><p>Add something premium to continue.</p><a href="{% url 'store:product_list' %}">Start shopping</a></div>
+{% endif %}
+</div>
+</section>
+{% endblock %}

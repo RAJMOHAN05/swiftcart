@@ -1,0 +1,8 @@
+Hi {{ order.full_name }},
+
+Your SwiftCart order #{{ order.id }} is now: {{ order.get_status_display }}.
+Tracking ID: {{ order.tracking_number }}
+
+View the latest timeline: {{ order_url }}
+
+SwiftCart

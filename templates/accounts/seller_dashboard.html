@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Admin Analytics | SwiftCart{% endblock %}
+{% block content %}
+<section class="dashboard-hero">
+    <div class="container admin-hero-row">
+        <div><span class="eyebrow"><i class="bi bi-graph-up-arrow"></i> Admin workspace</span><h1>Analytics dashboard</h1><p>Revenue, sales, inventory and customer signals in one view.</p></div>
+        <div class="admin-hero-actions"><a href="{% url 'accounts:sales_report' %}?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}"><i class="bi bi-file-earmark-bar-graph"></i> Sales reports</a><a href="{% url 'admin:index' %}"><i class="bi bi-gear"></i> Django admin</a></div>
+    </div>
+</section>
+
+<section class="container py-5">
+    <form class="analytics-filter" method="get">
+        <div><label for="analyticsStart">From</label><input id="analyticsStart" type="date" name="start" value="{{ start|date:'Y-m-d' }}"></div>
+        <div><label for="analyticsEnd">To</label><input id="analyticsEnd" type="date" name="end" value="{{ end|date:'Y-m-d' }}"></div>
+        <button><i class="bi bi-funnel"></i> Update dashboard</button>
+        <span>{{ start|date:"d M Y" }} – {{ end|date:"d M Y" }}</span>
+    </form>
+
+    <div class="analytics-grid">
+        <article class="metric-card metric-primary"><div class="metric-icon"><i class="bi bi-currency-rupee"></i></div><span>Net revenue</span><strong>₹{{ revenue|floatformat:2 }}</strong><small class="{% if revenue_growth >= 0 %}positive{% else %}negative{% endif %}"><i class="bi bi-graph-{% if revenue_growth >= 0 %}up{% else %}down{% endif %}-arrow"></i> {{ revenue_growth|floatformat:1 }}% vs previous period</small></article>
+        <article class="metric-card"><div class="metric-icon"><i class="bi bi-bag-check"></i></div><span>Total orders</span><strong>{{ orders_count }}</strong><small>All statuses in selected range</small></article>
+        <article class="metric-card"><div class="metric-icon"><i class="bi bi-receipt"></i></div><span>Average order</span><strong>₹{{ average_order|floatformat:2 }}</strong><small>Excludes cancellations</small></article>
+        <article class="metric-card"><div class="metric-icon"><i class="bi bi-people"></i></div><span>Active customers</span><strong>{{ customers_count }}</strong><small>{{ products_count }} catalogue products</small></article>
+    </div>
+
+    <div class="analytics-wide-grid mt-4">
+        <article class="analytics-panel chart-wide">
+            <div class="panel-heading"><div><span>Performance</span><h3>Revenue trend</h3></div><span class="chart-legend-dot">Daily revenue</span></div>
+            <div class="chart-box"><canvas id="revenueChart"></canvas></div>
+        </article>
+        <article class="analytics-panel">
+            <div class="panel-heading"><div><span>Fulfilment</span><h3>Order status</h3></div></div>
+            <div class="chart-box compact-chart"><canvas id="statusChart"></canvas></div>
+        </article>
+    </div>
+
+    <div class="analytics-columns mt-4">
+        <article class="analytics-panel"><div class="panel-heading"><div><span>Demand</span><h3>Top products</h3></div></div><div class="chart-box"><canvas id="productChart"></canvas></div></article>
+        <article class="analytics-panel"><div class="panel-heading"><div><span>Category mix</span><h3>Revenue by category</h3></div></div><div class="chart-box"><canvas id="categoryChart"></canvas></div></article>
+    </div>
+
+    <div class="analytics-columns mt-4">
+        <article class="analytics-panel">
+            <div class="panel-heading"><div><span>Latest activity</span><h3>Recent orders</h3></div><a href="{% url 'accounts:sales_report' %}">View report</a></div>
+            <div class="table-responsive"><table class="premium-table"><thead><tr><th>Order</th><th>Customer</th><th>Status</th><th>Total</th></tr></thead><tbody>{% for order in recent_orders %}<tr><td><strong>#{{ order.id }}</strong><small>{{ order.created_at|date:"d M, h:i A" }}</small></td><td>{{ order.user.username }}</td><td><span class="status-pill status-{{ order.status }}">{{ order.get_status_display }}</span></td><td>₹{{ order.total }}</td></tr>{% empty %}<tr><td colspan="4">No orders in this date range.</td></tr>{% endfor %}</tbody></table></div>
+        </article>
+        <article class="analytics-panel">
+            <div class="panel-heading"><div><span>Inventory</span><h3>Low-stock alerts</h3></div><a href="{% url 'admin:store_product_changelist' %}">Manage</a></div>
+            {% for product in low_stock %}<div class="stock-row"><span><strong>{{ product.name }}</strong><small>{{ product.category.name }}</small></span><strong class="{% if product.stock == 0 %}stock-critical{% endif %}">{{ product.stock }} left</strong></div>{% empty %}<p>Inventory looks healthy.</p>{% endfor %}
+        </article>
+    </div>
+</section>
+
+{{ status_data|json_script:"status-data" }}
+{{ top_products|json_script:"product-data" }}
+{{ revenue_data|json_script:"revenue-data" }}
+{{ category_sales|json_script:"category-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const statusData = JSON.parse(document.getElementById("status-data").textContent);
+    const productData = JSON.parse(document.getElementById("product-data").textContent);
+    const revenueData = JSON.parse(document.getElementById("revenue-data").textContent);
+    const categoryData = JSON.parse(document.getElementById("category-data").textContent);
+    const gridColor = "rgba(148, 163, 184, .18)";
+    Chart.defaults.color = "#667085";
+    Chart.defaults.font.family = "Inter, system-ui, sans-serif";
+    new Chart(document.getElementById("revenueChart"), {type: "line", data: {labels: revenueData.map(x => x.day), datasets: [{label: "Revenue", data: revenueData.map(x => Number(x.revenue)), borderColor: "#4f46e5", backgroundColor: "rgba(79,70,229,.12)", fill: true, tension: .35, pointRadius: 3}]}, options: {responsive: true, maintainAspectRatio: false, scales: {x: {grid: {display: false}}, y: {beginAtZero: true, grid: {color: gridColor}, ticks: {callback: value => "₹" + value}}}, plugins: {legend: {display: false}}}});
+    new Chart(document.getElementById("statusChart"), {type: "doughnut", data: {labels: statusData.map(x => x.status), datasets: [{data: statusData.map(x => x.total), backgroundColor: ["#4f46e5", "#22c55e", "#f59e0b", "#0ea5e9", "#f97316", "#ef4444"], borderWidth: 0}]}, options: {responsive: true, maintainAspectRatio: false, cutout: "70%", plugins: {legend: {position: "bottom", labels: {usePointStyle: true}}}}});
+    new Chart(document.getElementById("productChart"), {type: "bar", data: {labels: productData.map(x => x.product__name), datasets: [{label: "Units sold", data: productData.map(x => x.quantity), backgroundColor: "#818cf8", borderRadius: 7}]}, options: {indexAxis: "y", responsive: true, maintainAspectRatio: false, scales: {x: {beginAtZero: true, grid: {color: gridColor}}, y: {grid: {display: false}}}, plugins: {legend: {display: false}}}});
+    new Chart(document.getElementById("categoryChart"), {type: "bar", data: {labels: categoryData.map(x => x.product__category__name), datasets: [{label: "Revenue", data: categoryData.map(x => Number(x.revenue)), backgroundColor: "#14b8a6", borderRadius: 7}]}, options: {responsive: true, maintainAspectRatio: false, scales: {x: {grid: {display: false}}, y: {beginAtZero: true, grid: {color: gridColor}, ticks: {callback: value => "₹" + value}}}, plugins: {legend: {display: false}}}});
+});
+</script>
+{% endblock %}

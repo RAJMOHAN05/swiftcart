@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Wishlist | SwiftCart{% endblock %}
+{% block content %}
+<section class="page-hero compact"><div class="container"><span class="section-kicker">Saved for later</span><h1>My wishlist</h1><p>Your favourite products in one place.</p></div></section>
+<section class="section-space">
+<div class="container">
+    <div class="row g-4">
+        {% for item in items %}
+            <div class="col-sm-6 col-lg-4 col-xl-3">{% with product=item.product %}{% include "store/_product_card.html" %}{% endwith %}</div>
+        {% empty %}
+            <div class="empty-state"><i class="bi bi-heart"></i><h2>Your wishlist is empty</h2><p>Save products you like and return to them later.</p><a href="{% url 'store:product_list' %}">Explore products</a></div>
+        {% endfor %}
+    </div>
+</div>
+</section>
+{% endblock %}

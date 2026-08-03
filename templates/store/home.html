@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}SwiftCart — Premium Shopping{% endblock %}
+{% block content %}
+<section class="hero-section phase1-hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-copy reveal-on-scroll">
+        <span class="eyebrow"><i class="bi bi-stars"></i> Premium collection 2026</span>
+        <h1>Everyday essentials,<br><span>beautifully selected.</span></h1>
+        <p>Shop trusted fashion, beauty, electronics and lifestyle products through a clean, secure and effortless experience.</p>
+        <div class="hero-actions">
+          <a class="primary-cta" href="{% url 'store:product_list' %}">Explore collection <i class="bi bi-arrow-right"></i></a>
+          <a class="secondary-cta" href="#featured">View featured</a>
+        </div>
+        <div class="trust-row">
+          <div><strong>100%</strong><span>Secure checkout</span></div>
+          <div><strong>4.8/5</strong><span>Customer rating</span></div>
+          <div><strong>Easy</strong><span>Returns & tracking</span></div>
+        </div>
+      </div>
+      <div class="hero-visual reveal-on-scroll">
+        <div class="hero-glow"></div>
+        <div class="hero-orb"></div>
+        <div class="floating-card card-one"><span class="float-icon"><i class="bi bi-headphones"></i></span><span><small>Top category</small>Premium audio</span></div>
+        <div class="floating-card card-two"><span class="float-icon"><i class="bi bi-stars"></i></span><span><small>Curated daily</small>Smart lifestyle</span></div>
+        <div class="hero-product">
+          <div class="hero-product-top"><div class="hero-product-icon"><i class="bi bi-bag-check"></i></div><span class="live-pill"><i></i> Selected</span></div>
+          <span>SWIFTCART EDIT</span>
+          <h2>Quality you can trust</h2>
+          <p>Use coupon <strong>RAJ10</strong> for 10% off.</p>
+          <div class="hero-mini-products"><span>Fashion</span><span>Beauty</span><span>Tech</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="brand-marquee" aria-label="Popular brands">
+ <div class="container"><span>Popular brands</span><div><b>NIKE</b><b>ADIDAS</b><b>LEVI'S</b><b>MAYBELLINE</b><b>DOT &amp; KEY</b><b>PUMA</b></div></div>
+</section>
+
+<section class="section-space category-showcase">
+ <div class="container">
+  <div class="section-heading reveal-on-scroll"><div><span class="section-kicker">Shop your way</span><h2>Popular categories</h2><p>Everything you need, arranged to help you find it faster.</p></div><a href="{% url 'store:product_list' %}">View all products <i class="bi bi-arrow-right"></i></a></div>
+  <div class="category-grid">
+   {% for category in categories %}<a class="premium-category-card reveal-on-scroll" href="{{ category.get_absolute_url }}"><span class="category-icon">{{ category.icon }}</span><div><h3>{{ category.name }}</h3><p>{{ category.description }}</p></div><i class="bi bi-arrow-up-right"></i></a>{% endfor %}
+  </div>
+ </div>
+</section>
+
+<section class="section-space soft-section" id="featured">
+ <div class="container">
+  <div class="section-heading reveal-on-scroll"><div><span class="section-kicker">Handpicked for you</span><h2>Featured products</h2><p>Customer favourites selected for quality, value and everyday use.</p></div><a href="{% url 'store:product_list' %}">Shop collection <i class="bi bi-arrow-right"></i></a></div>
+  <div class="row g-4">{% for product in featured_products %}<div class="col-sm-6 col-xl-3 reveal-on-scroll">{% include "store/_product_card.html" %}</div>{% empty %}<div class="empty-state"><i class="bi bi-box-seam"></i><h2>No products yet</h2><p>Run the demo product seed command.</p></div>{% endfor %}</div>
+ </div>
+</section>
+
+<section class="container flash-sale-section reveal-on-scroll" data-sale-end="{{ flash_sale_end|date:'c' }}">
+ <div class="flash-copy"><span class="eyebrow">Limited time</span><h2>Flash sale is live</h2><p>Popular picks at special prices while stocks last.</p></div>
+ <div class="countdown-grid" id="flashCountdown"><div><strong id="countHours">08</strong><span>Hours</span></div><div><strong id="countMinutes">00</strong><span>Minutes</span></div><div><strong id="countSeconds">00</strong><span>Seconds</span></div></div>
+ <a href="{% url 'store:product_list' %}?sort=price_low" class="btn-premium">Shop deals <i class="bi bi-arrow-right"></i></a>
+</section>
+
+{% if recommended_products %}<section class="section-space recommendation-section"><div class="container"><div class="section-heading reveal-on-scroll"><div><span class="section-kicker"><i class="bi bi-stars"></i> AI-powered picks</span><h2>Recommended for you</h2><p>Our hybrid engine blends your browsing, wishlist, purchases, ratings and store trends.</p></div><span class="ai-engine-pill"><i class="bi bi-cpu"></i> Explainable recommendations</span></div><div class="row g-4">{% for product in recommended_products %}<div class="col-sm-6 col-xl-3 reveal-on-scroll">{% include "store/_product_card.html" with product=product %}</div>{% endfor %}</div></div></section>{% endif %}
+
+<section class="promo-section reveal-on-scroll"><div class="container"><div class="promo-card"><div><span class="section-kicker">New customer offer</span><h2>Save 10% on your first premium order</h2><p>Apply coupon code <strong>RAJ10</strong> in your cart before checkout.</p></div><div class="promo-action"><span class="coupon-chip">RAJ10 <i class="bi bi-copy"></i></span><a href="{% url 'store:product_list' %}">Start shopping <i class="bi bi-arrow-right"></i></a></div></div></div></section>
+
+<section class="section-space"><div class="container"><div class="section-heading reveal-on-scroll"><div><span class="section-kicker">Fresh arrivals</span><h2>New in store</h2><p>Recently added products ready to become your new favourites.</p></div></div><div class="row g-4">{% for product in new_products %}<div class="col-sm-6 col-xl-3 reveal-on-scroll">{% include "store/_product_card.html" %}</div>{% endfor %}</div></div></section>
+
+<section class="benefit-section"><div class="container"><div class="benefit-grid"><div class="reveal-on-scroll"><i class="bi bi-shield-check"></i><h3>Secure shopping</h3><p>Your account and checkout journey are protected from start to finish.</p></div><div class="reveal-on-scroll"><i class="bi bi-truck"></i><h3>Reliable delivery</h3><p>Follow every order from confirmation through final delivery.</p></div><div class="reveal-on-scroll"><i class="bi bi-arrow-repeat"></i><h3>Easy returns</h3><p>A straightforward experience when a product is not right for you.</p></div><div class="reveal-on-scroll"><i class="bi bi-headset"></i><h3>Customer support</h3><p>Quick help for products, payments, delivery and order questions.</p></div></div></div></section>
+{% endblock %}

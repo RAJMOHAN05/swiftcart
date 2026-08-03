@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Login | SwiftCart{% endblock %}
+{% block content %}
+<section class="auth-section">
+    <div class="auth-shell">
+        <div class="auth-copy">
+            <span class="eyebrow">Welcome back</span>
+            <h1>Your premium store, ready when you are.</h1>
+            <p>Log in to access saved products, recent orders and personalised shopping tools.</p>
+        </div>
+        <div class="auth-card">
+            <h2>Login</h2>
+            <p>Use your SwiftCart account details.</p>
+            <form method="post">{% csrf_token %}{{ form.as_p }}{% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}<button>Login securely</button></form>
+            <small>New here? <a href="{% url 'accounts:register' %}">Create account</a></small>
+        </div>
+    </div>
+</section>
+{% endblock %}

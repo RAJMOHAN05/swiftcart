@@ -1,0 +1,48 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static log %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'admin/css/dashboard.css' %}">{% endblock %}
+{% block coltype %}colMS{% endblock %}
+{% block bodyclass %}{{ block.super }} dashboard swift-admin-dashboard{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+
+{% block content %}
+<section class="admin-welcome">
+    <div>
+        <span class="admin-eyebrow">Operations dashboard</span>
+        <h1>Welcome back, {{ user.get_short_name|default:user.username }}</h1>
+        <p>Manage orders, verify UPI payments, update products and support SwiftCart customers.</p>
+    </div>
+    <div class="admin-welcome-actions">
+        <a href="{% url 'admin:orders_order_changelist' %}">Manage orders <span>→</span></a>
+        <a class="secondary" href="{% url 'accounts:seller_dashboard' %}">View analytics</a>
+    </div>
+</section>
+
+<div id="content-main" class="app-list">
+    {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+</div>
+{% endblock %}
+
+{% block sidebar %}
+<div id="content-related">
+    <div class="module" id="recent-actions-module">
+        <h2>{% translate 'Recent activity' %}</h2>
+        <h3>{% translate 'Your latest changes' %}</h3>
+        {% get_admin_log 8 as admin_log for_user user %}
+        {% if not admin_log %}
+        <p class="admin-empty-activity">No activity yet.</p>
+        {% else %}
+        <ul class="actionlist">
+            {% for entry in admin_log %}
+            <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}">
+                {% if entry.is_deletion or not entry.get_admin_url %}{{ entry.object_repr }}{% else %}<a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>{% endif %}
+                <br>{% if entry.content_type %}<span class="mini quiet">{{ entry.content_type.name|capfirst }}</span>{% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

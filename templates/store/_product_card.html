@@ -1,0 +1,23 @@
+<article class="premium-product-card h-100">
+ <div class="product-media">
+  <div class="product-labels">{% if product.badge %}<span class="product-badge">{{ product.badge }}</span>{% endif %}{% if product.discount_percentage %}<span class="discount-badge">-{{ product.discount_percentage }}%</span>{% endif %}</div>
+  <a class="product-image-link" href="{{ product.get_absolute_url }}" aria-label="View {{ product.name }}">{% if product.image_url %}<img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy" decoding="async">{% else %}<div class="image-fallback">🛍️</div>{% endif %}</a>
+  {% if user.is_authenticated %}
+  <form method="post" action="{% url 'store:toggle_wishlist' product.id %}" class="wishlist-button-form js-wishlist-form" data-product-id="{{ product.id }}">
+   {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+   <button class="wishlist-button {% if product.id in wishlist_product_ids %}active{% endif %}" type="submit" aria-label="Toggle {{ product.name }} in wishlist" aria-pressed="{% if product.id in wishlist_product_ids %}true{% else %}false{% endif %}"><i class="bi {% if product.id in wishlist_product_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i></button>
+  </form>
+  {% else %}
+  <a class="wishlist-button" href="{% url 'login' %}?next={{ request.path }}" aria-label="Log in to save {{ product.name }}"><i class="bi bi-heart"></i></a>
+  {% endif %}
+  <a class="quick-view-link" href="{{ product.get_absolute_url }}"><i class="bi bi-eye"></i> Quick view</a>
+ </div>
+ <div class="product-card-body">
+  <div class="product-meta-row"><span class="product-category">{{ product.category.name }}</span><span class="stock-dot {% if not product.in_stock %}out{% endif %}"><i></i> {% if product.in_stock %}In stock{% else %}Sold out{% endif %}</span></div>
+  <h3><a href="{{ product.get_absolute_url }}">{{ product.name }}</a></h3>
+  <div class="rating-row"><span class="stars">★</span><strong>{{ product.average_rating }}</strong><small>({{ product.review_count }} reviews)</small></div>
+  {% if product.recommendation_reason %}<div class="ai-reason"><i class="bi bi-stars"></i> {{ product.recommendation_reason }}</div>{% endif %}
+  <p>{{ product.short_description|default:product.description|truncatewords:12 }}</p>
+  <div class="product-card-bottom"><div class="price-row"><strong>₹{{ product.price }}</strong>{% if product.original_price %}<del>₹{{ product.original_price }}</del>{% endif %}</div><a class="product-button" href="{{ product.get_absolute_url }}" aria-label="View {{ product.name }}"><span>View</span><i class="bi bi-arrow-up-right"></i></a></div>
+ </div>
+</article>

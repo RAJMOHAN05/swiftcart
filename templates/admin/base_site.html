@@ -1,0 +1,28 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | SwiftCart Admin{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/admin-modern.css' %}?v=20260731.6">
+{% endblock %}
+
+{% block branding %}
+<div id="site-name" class="swift-admin-brand">
+    <a href="{% url 'admin:index' %}">
+        <span class="swift-admin-mark">S</span>
+        <span><strong>SwiftCart</strong><small>Commerce Control Center</small></span>
+    </a>
+</div>
+{% if user.is_anonymous %}{% include "admin/color_theme_toggle.html" %}{% endif %}
+{% endblock %}
+
+{% block nav-global %}
+{% if user.is_authenticated %}
+<nav class="admin-shortcuts" aria-label="Admin shortcuts">
+    <a href="{% url 'store:home' %}"><span>↗</span> Storefront</a>
+    {% if user.is_staff %}<a href="{% url 'accounts:seller_dashboard' %}"><span>▥</span> Analytics</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

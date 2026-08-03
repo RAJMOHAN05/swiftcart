@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: swiftcart
+      POSTGRES_USER: swiftcart
+      POSTGRES_PASSWORD: swiftcart_dev_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U swiftcart -d swiftcart"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py seed_store &&
+             gunicorn ecommerce.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: "127.0.0.1,localhost,0.0.0.0"
+      DJANGO_SECRET_KEY: "replace-this-compose-development-secret"
+      EMAIL_BACKEND: "django.core.mail.backends.console.EmailBackend"
+      DB_ENGINE: postgres
+      POSTGRES_DB: swiftcart
+      POSTGRES_USER: swiftcart
+      POSTGRES_PASSWORD: swiftcart_dev_password
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

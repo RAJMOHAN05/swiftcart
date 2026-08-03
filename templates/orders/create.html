@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Checkout | SwiftCart{% endblock %}
+
+{% block content %}
+<section class="page-hero compact checkout-hero">
+    <div class="container">
+        <span class="section-kicker">Secure checkout</span>
+        <h1>Complete your order</h1>
+        <p>Add your delivery details and choose how you would like to pay.</p>
+    </div>
+</section>
+
+<section class="section-space checkout-page">
+    <div class="container">
+        <form method="post" class="checkout-layout" id="checkoutForm">
+            {% csrf_token %}
+
+            <div class="checkout-main">
+                <section class="checkout-panel">
+                    <div class="checkout-panel-heading">
+                        <span class="step-number">1</span>
+                        <div>
+                            <h2>Delivery information</h2>
+                            <p>Enter the address where your order should be delivered.</p>
+                        </div>
+                    </div>
+
+                    {% if form.non_field_errors %}
+                        <div class="checkout-error">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="checkout-fields">
+                        {% for field in form %}
+                            {% if field.name != "payment_method" and field.name != "transaction_reference" %}
+                            <div class="checkout-field {% if field.name == 'address' %}field-wide{% endif %}">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                    <div class="field-error">{{ field.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <section class="checkout-panel payment-section">
+                    <div class="checkout-panel-heading">
+                        <span class="step-number">2</span>
+                        <div>
+                            <h2>Payment method</h2>
+                            <p>Select Cash on Delivery or pay securely through any UPI app.</p>
+                        </div>
+                    </div>
+
+                    <div class="payment-choice-grid">
+                        <label class="payment-choice active" data-payment-card="cod">
+                            <input type="radio" name="payment_method" value="cod" {% if form.payment_method.value != "upi" %}checked{% endif %}>
+                            <span class="payment-choice-icon"><i class="bi bi-cash-stack"></i></span>
+                            <span class="payment-choice-copy">
+                                <strong>Cash on Delivery</strong>
+                                <small>Pay when your order reaches you.</small>
+                            </span>
+                            <span class="payment-check"><i class="bi bi-check-lg"></i></span>
+                        </label>
+
+                        <label class="payment-choice" data-payment-card="upi">
+                            <input type="radio" name="payment_method" value="upi" {% if form.payment_method.value == "upi" %}checked{% endif %}>
+                            <span class="payment-choice-icon upi-icon">UPI</span>
+                            <span class="payment-choice-copy">
+                                <strong>UPI Payment</strong>
+                                <small>Use Google Pay, PhonePe, Paytm, BHIM or any UPI app.</small>
+                            </span>
+                            <span class="payment-check"><i class="bi bi-check-lg"></i></span>
+                        </label>
+                    </div>
+
+                    <div class="upi-payment-panel" id="upiPaymentPanel" hidden>
+                        <div class="upi-qr-wrap">
+                            <div class="qr-frame">
+                                <img src="{% static 'images/swiftcart-upi-qr.png' %}" alt="SwiftCart UPI payment QR code">
+                            </div>
+                            <span class="scan-badge"><i class="bi bi-qr-code-scan"></i> Scan &amp; Pay</span>
+                        </div>
+
+                        <div class="upi-payment-details">
+                            <span class="upi-kicker">SwiftCart UPI</span>
+                            <h3>Pay using any UPI app</h3>
+                            <p>Scan the QR code, enter the order amount shown in the summary, and complete the payment.</p>
+
+                            <div class="upi-id-box">
+                                <div>
+                                    <small>UPI ID</small>
+                                    <strong id="upiIdText">7779997014@kotakbank</strong>
+                                </div>
+                                <button type="button" id="copyUpiButton">
+                                    <i class="bi bi-copy"></i>
+                                    <span>Copy</span>
+                                </button>
+                            </div>
+
+                            <div class="upi-instructions">
+                                <div><span>1</span><p>Open your preferred UPI application.</p></div>
+                                <div><span>2</span><p>Scan the QR or use the UPI ID above.</p></div>
+                                <div><span>3</span><p>Pay exactly <strong>₹{{ cart.get_total_price|floatformat:2 }}</strong>.</p></div>
+                            </div>
+
+                            <label class="transaction-field">
+                                <span>Transaction reference <small>(required after UPI payment)</small></span>
+                                <input type="text" name="transaction_reference" value="{{ form.transaction_reference.value|default:'' }}" placeholder="Example: 426718390245">
+                                {% if form.transaction_reference.errors %}<span class="field-error">{{ form.transaction_reference.errors|striptags }}</span>{% endif %}
+                            </label>
+
+                            <div class="upi-security-note">
+                                <i class="bi bi-shield-check"></i>
+                                <span>Never share your UPI PIN with anyone. SwiftCart will never ask for it.</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="order-summary checkout-summary">
+                <div class="summary-heading">
+                    <div>
+                        <span class="section-kicker">Your cart</span>
+                        <h2>Order summary</h2>
+                    </div>
+                    <span class="summary-count">{{ cart|length }} item{{ cart|length|pluralize }}</span>
+                </div>
+
+                <div class="summary-products">
+                    {% for item in cart %}
+                        <div class="checkout-item">
+                            <div class="checkout-item-image">
+                                {% if item.product.image_url %}
+                                    <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}">
+                                {% else %}
+                                    <i class="bi bi-box-seam"></i>
+                                {% endif %}
+                                <span>{{ item.quantity }}</span>
+                            </div>
+                            <div class="checkout-item-copy">
+                                <strong>{{ item.product.name }}</strong>
+                                <small>₹{{ item.price }} each</small>
+                            </div>
+                            <strong class="checkout-item-price">₹{{ item.total_price }}</strong>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="summary-calculation">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <strong>₹{{ cart.get_subtotal|floatformat:2 }}</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Discount</span>
+                        <strong class="discount-text">− ₹{{ cart.get_discount|floatformat:2 }}</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Delivery</span>
+                        <strong class="free-delivery">Free</strong>
+                    </div>
+                    <div class="summary-total">
+                        <span>Total</span>
+                        <strong>₹{{ cart.get_total_price|floatformat:2 }}</strong>
+                    </div>
+                </div>
+
+                <button class="checkout-submit" type="submit">
+                    <span>Place order</span>
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+
+                <div class="checkout-trust">
+                    <span><i class="bi bi-shield-lock"></i> Secure checkout</span>
+                    <span><i class="bi bi-arrow-repeat"></i> Easy returns</span>
+                </div>
+            </aside>
+        </form>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,236 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="SwiftCart premium online shopping experience">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>{% block title %}SwiftCart Premium{% endblock %}</title>
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem("swiftcart-theme");
+                document.documentElement.setAttribute("data-theme", saved === "dark" ? "dark" : "light");
+            } catch (e) {
+                document.documentElement.setAttribute("data-theme", "light");
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="manifest" href="{% static 'manifest.webmanifest' %}?v=20260731.6">
+    <link rel="apple-touch-icon" href="{% static 'images/pwa-icon.svg' %}?v=20260731.6">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20260731.6">
+    {% block extra_css %}{% endblock %}
+    <style>
+        /* Critical loader styles prevent raw loader text when an old PWA cache exists. */
+        #pageLoader{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;align-content:center;gap:14px;background:#f8fafc;transition:opacity .3s ease,visibility .3s ease}
+        #pageLoader.is-hidden{opacity:0;visibility:hidden;pointer-events:none}
+        #pageLoader .loader-brand{display:flex;align-items:center;gap:10px;font:800 18px/1 system-ui,sans-serif;color:#101828}
+        #pageLoader .loader-brand span{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;background:#b7ff39;color:#101114}
+        #pageLoader .loader-line{width:150px;height:3px;overflow:hidden;border-radius:99px;background:#e4e7ec}
+        #pageLoader .loader-line i{display:block;width:50%;height:100%;background:#6d4aff;animation:criticalLoader 1s infinite ease}
+        @keyframes criticalLoader{from{transform:translateX(-110%)}to{transform:translateX(220%)}}
+    </style>
+    <noscript><style>#pageLoader{display:none!important}</style></noscript>
+</head>
+<body>
+<div class="page-loader" id="pageLoader" aria-hidden="true"><div class="loader-brand"><span>S</span><strong>SwiftCart</strong></div><div class="loader-line"><i></i></div></div>
+<div class="top-strip">
+    <div class="container d-flex justify-content-between">
+        <span><i class="bi bi-truck"></i> Free delivery above ₹999</span>
+        <span class="d-none d-md-inline">Premium products. Secure shopping. Easy returns.</span>
+    </div>
+</div>
+
+<nav class="navbar navbar-expand-lg navbar-light premium-nav sticky-top">
+    <div class="container">
+        <a class="navbar-brand brand-mark" href="{% url 'store:home' %}">
+            <span class="brand-icon">S</span> SwiftCart
+        </a>
+
+        <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#mainNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+            <form class="search-shell mx-lg-4 my-3 my-lg-0" method="get" action="{% url 'store:product_list' %}">
+                <i class="bi bi-search"></i>
+                <input name="q" value="{{ request.GET.q }}" placeholder="Search products and brands">
+                <button>Search</button>
+            </form>
+
+            <div class="nav-actions ms-auto">
+                <button class="icon-action install-app-button" id="installAppButton" type="button" aria-label="Install SwiftCart app"><i class="bi bi-phone"></i><span>Install App</span></button>
+                <button class="icon-action" id="themeToggle" type="button" aria-label="Change theme"><i class="bi bi-moon-stars"></i><span class="theme-label"></span></button>
+                {% if user.is_authenticated %}
+                <div class="dropdown">
+                    <button class="icon-action notification-trigger" data-bs-toggle="dropdown" id="notificationButton">
+                        <i class="bi bi-bell"></i><span>Alerts</span>
+                        <b id="notificationBadge" {% if not notification_count %}hidden{% endif %}>{{ notification_count }}</b>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end notification-panel">
+                        <div class="notification-heading"><strong>Notifications</strong><button id="markNotificationsRead" type="button">Mark all read</button></div>
+                        <div id="notificationList"><div class="notification-empty">Loading notifications...</div></div>
+                    </div>
+                </div>
+                {% endif %}
+                {% if user.is_authenticated %}
+                <div class="dropdown profile-menu">
+                    <button class="profile-trigger dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="profile-avatar">{{ user.username|first|upper }}</span>
+                        <span class="profile-label">Profile</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end profile-dropdown">
+                        <li class="profile-dropdown-header">
+                            <strong>{{ user.username }}</strong>
+                            <small>{{ user.email|default:"SwiftCart customer" }}</small>
+                        </li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:dashboard' %}"><i class="bi bi-grid"></i> Dashboard</a></li>
+                        <li><a class="dropdown-item" href="{% url 'orders:order_history' %}"><i class="bi bi-box-seam"></i> My orders</a></li>
+                        <li><a class="dropdown-item" href="{% url 'store:wishlist' %}"><i class="bi bi-heart"></i> Wishlist</a></li>
+                        {% if user.is_staff %}
+                        <li><a class="dropdown-item" href="{% url 'accounts:seller_dashboard' %}"><i class="bi bi-bar-chart"></i> Seller analytics</a></li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:sales_report' %}"><i class="bi bi-file-earmark-spreadsheet"></i> Sales reports</a></li>
+                        <li><a class="dropdown-item" href="{% url 'support:inbox' %}"><i class="bi bi-headset"></i> Support inbox</a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="post" action="{% url 'logout' %}">
+                                {% csrf_token %}
+                                <button class="dropdown-item logout-menu-item"><i class="bi bi-box-arrow-right"></i> Logout</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+                {% else %}
+                    <a href="{% url 'login' %}">
+                        <i class="bi bi-person"></i><span>Login</span>
+                    </a>
+                {% endif %}
+
+                {% if user.is_authenticated %}
+                <a href="{% url 'store:wishlist' %}" title="Wishlist">
+                    <i class="bi bi-heart"></i><span>Wishlist</span>
+                    <b id="wishlistNavBadge" {% if not wishlist_count %}hidden{% endif %}>{{ wishlist_count }}</b>
+                </a>
+                {% endif %}
+
+                <a href="{% url 'cart:cart_detail' %}" title="Cart">
+                    <i class="bi bi-bag"></i><span>Cart</span>
+                    {% if cart|length %}<b>{{ cart|length }}</b>{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="category-nav d-none d-lg-block">
+    <div class="container d-flex gap-4">
+        <a href="{% url 'store:product_list' %}">Shop All</a>
+        {% for category in nav_categories %}
+            <a href="{{ category.get_absolute_url }}">{{ category.icon }} {{ category.name }}</a>
+        {% endfor %}
+    </div>
+</div>
+
+{% for message in messages %}
+<div class="container mt-3">
+    <div class="alert alert-premium alert-dismissible fade show">
+        {{ message }}
+        <button class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+</div>
+{% endfor %}
+
+<main class="site-main">{% block content %}{% endblock %}</main>
+
+<footer class="premium-footer">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <a class="brand-mark text-white text-decoration-none" href="{% url 'store:home' %}">
+                    <span class="brand-icon">S</span> SwiftCart
+                </a>
+                <p class="mt-3">Discover trusted beauty, fashion, lifestyle and everyday essentials in one simple shopping destination.</p>
+                <div class="footer-trust">
+                    <span><i class="bi bi-shield-check"></i> Secure shopping</span>
+                    <span><i class="bi bi-arrow-repeat"></i> Easy returns</span>
+                </div>
+            </div>
+
+            <div class="col-6 col-lg-2">
+                <h6>Shop</h6>
+                <a href="{% url 'store:product_list' %}">All products</a>
+                <a href="{% url 'store:wishlist' %}">Wishlist</a>
+                <a href="{% url 'cart:cart_detail' %}">Shopping cart</a>
+                <a href="{% url 'orders:order_history' %}">Track orders</a>
+            </div>
+
+            <div class="col-6 col-lg-2">
+                <h6>Customer care</h6>
+                <span class="footer-static-link">Delivery information</span>
+                <span class="footer-static-link">Return policy</span>
+                <span class="footer-static-link">Size guide</span>
+                <span class="footer-static-link">Contact support</span>
+            </div>
+
+            <div class="col-lg-4">
+                <h6>Popular brands</h6>
+                <p class="footer-brand-copy">Explore customer favourites from Dot &amp; Key, H&amp;M, Peter England, Levi's, Puma, Nike, Adidas, Maybelline and more.</p>
+                <div class="footer-brand-tags">
+                    <span>Dot &amp; Key</span><span>H&amp;M</span><span>Peter England</span>
+                    <span>Levi's</span><span>Puma</span><span>Nike</span>
+                    <span>Adidas</span><span>Maybelline</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <span>© {% now "Y" %} SwiftCart. All rights reserved.</span>
+            <span>Fashion • Beauty • Lifestyle • Essentials</span>
+        </div>
+    </div>
+</footer>
+
+<nav class="mobile-bottom-nav d-lg-none">
+<a href="{% url 'store:home' %}"><i class="bi bi-house"></i><span>Home</span></a>
+<a href="{% url 'store:product_list' %}"><i class="bi bi-grid"></i><span>Shop</span></a>
+<a href="{% url 'store:wishlist' %}"><i class="bi bi-heart"></i><span>Wishlist</span></a>
+<a href="{% url 'cart:cart_detail' %}"><i class="bi bi-bag"></i><span>Cart</span></a>
+{% if user.is_authenticated %}<a href="{% url 'accounts:dashboard' %}"><i class="bi bi-person"></i><span>Profile</span></a>{% else %}<a href="{% url 'login' %}"><i class="bi bi-person"></i><span>Login</span></a>{% endif %}
+</nav>
+<div class="support-chat" data-chat-endpoint="{% url 'support:chat_api' %}">
+<button class="chat-toggle" id="chatToggle"><i class="bi bi-chat-dots"></i></button>
+<div class="chat-window" id="chatWindow">
+<div class="chat-header"><div><strong>SwiftCart Support</strong><small><i class="support-online-dot"></i> Assistant + human support</small></div><button id="chatClose" aria-label="Close chat"><i class="bi bi-x-lg"></i></button></div>
+<div class="chat-messages" id="chatMessages"><div class="bot-message">Hi! How can we help with products, delivery or returns?</div></div>
+<div class="chat-suggestions"><button data-chat="Where is my order?">Track order</button><button data-chat="Tell me about returns">Returns</button><button data-chat="Show popular products">Popular products</button></div>
+<form class="chat-form" id="chatForm"><input id="chatInput" maxlength="1200" autocomplete="off" placeholder="Type your message..."><button aria-label="Send message"><i class="bi bi-send"></i></button></form>
+</div></div>
+<div class="app-toast" id="appToast" role="status" aria-live="polite"></div>
+<div class="modal fade install-help-modal" id="installHelpModal" tabindex="-1" aria-labelledby="installHelpTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <button class="install-modal-close" type="button" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      <div class="install-modal-icon"><i class="bi bi-phone"></i></div>
+      <span class="section-kicker">SwiftCart PWA</span>
+      <h2 id="installHelpTitle">Install SwiftCart as an app</h2>
+      <p id="installHelpMessage">Use Chrome's install option to add SwiftCart to your device.</p>
+      <div class="install-steps" id="installHelpSteps">
+        <div><span>1</span><p>Open the Chrome menu <strong>⋮</strong>.</p></div>
+        <div><span>2</span><p>Select <strong>Cast, save and share</strong>.</p></div>
+        <div><span>3</span><p>Choose <strong>Install SwiftCart</strong>.</p></div>
+      </div>
+      <button class="install-modal-done" type="button" data-bs-dismiss="modal">Got it</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/app.js' %}?v=20260731.6"></script>
+</body>
+</html>

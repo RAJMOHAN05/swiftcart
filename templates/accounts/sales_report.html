@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Sales Report | SwiftCart{% endblock %}
+{% block content %}
+<section class="dashboard-hero"><div class="container admin-hero-row"><div><span class="eyebrow">Finance & operations</span><h1>Sales and revenue report</h1><p>Auditable order-level reporting with CSV export.</p></div><a class="invoice-download-button" href="?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}&format=csv"><i class="bi bi-filetype-csv"></i> Download CSV</a></div></section>
+<section class="container py-5">
+    <form class="analytics-filter" method="get"><div><label>From</label><input type="date" name="start" value="{{ start|date:'Y-m-d' }}"></div><div><label>To</label><input type="date" name="end" value="{{ end|date:'Y-m-d' }}"></div><button><i class="bi bi-funnel"></i> Generate report</button><a href="{% url 'accounts:seller_dashboard' %}"><i class="bi bi-arrow-left"></i> Analytics</a></form>
+    <div class="report-summary-grid">
+        <article><span>Net revenue</span><strong>₹{{ revenue|floatformat:2 }}</strong></article>
+        <article><span>Total orders</span><strong>{{ orders_count }}</strong></article>
+        <article><span>Delivered</span><strong>{{ delivered_count }}</strong></article>
+        <article><span>Cancelled</span><strong>{{ cancelled_count }}</strong></article>
+    </div>
+    <div class="analytics-panel report-table-panel mt-4">
+        <div class="panel-heading"><div><span>{{ start|date:"d M Y" }} – {{ end|date:"d M Y" }}</span><h3>Order ledger</h3></div><small>Cancelled orders are excluded from net revenue.</small></div>
+        <div class="table-responsive"><table class="premium-table report-table"><thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Items</th><th>Payment</th><th>UTR / Reference</th><th>Status</th><th>Revenue</th><th>Invoice</th></tr></thead><tbody>
+        {% for order in orders %}<tr><td><strong>#{{ order.id }}</strong><small>{{ order.tracking_number }}</small></td><td>{{ order.full_name }}<small>{{ order.email }}</small></td><td>{{ order.created_at|date:"d M Y" }}</td><td>{{ order.items.all|length }}</td><td>{{ order.get_payment_method_display }}</td><td>{% if order.transaction_reference %}<strong class="report-utr">{{ order.transaction_reference }}</strong>{% else %}<span class="report-utr-empty">—</span>{% endif %}</td><td><span class="status-pill status-{{ order.status }}">{{ order.get_status_display }}</span></td><td>{% if order.status == "cancelled" %}<del>₹{{ order.total }}</del>{% else %}<strong>₹{{ order.total }}</strong>{% endif %}</td><td><a class="table-action" href="{% url 'orders:invoice_pdf' order.id %}"><i class="bi bi-file-earmark-pdf"></i></a></td></tr>
+        {% empty %}<tr><td colspan="9">No orders found for this date range.</td></tr>{% endfor %}
+        </tbody></table></div>
+    </div>
+</section>
+{% endblock %}

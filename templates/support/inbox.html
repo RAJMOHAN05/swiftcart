@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Support Inbox | SwiftCart{% endblock %}
+{% block content %}
+<section class="dashboard-hero"><div class="container admin-hero-row"><div><span class="eyebrow"><i class="bi bi-headset"></i> Customer care</span><h1>Live support inbox</h1><p>Reply to shoppers while their chat widget polls for new messages.</p></div><a class="invoice-download-button" href="{% url 'accounts:seller_dashboard' %}"><i class="bi bi-bar-chart"></i> Analytics</a></div></section>
+<section class="container py-5">
+    <div class="support-inbox-layout">
+        <aside class="conversation-list">
+            <div class="conversation-list-heading"><h2>Conversations</h2><span>{{ conversations|length }}</span></div>
+            {% for conversation in conversations %}
+            <a href="?conversation={{ conversation.id }}" class="{% if active.id == conversation.id %}active{% endif %}">
+                <span class="conversation-avatar">{% if conversation.user %}{{ conversation.user.username|first|upper }}{% else %}?{% endif %}</span>
+                <span><strong>{% if conversation.user %}{{ conversation.user.username }}{% else %}Guest shopper{% endif %}</strong><small>{% with last=conversation.messages.first %}{% if last %}{{ last.body|truncatechars:46 }}{% else %}New conversation{% endif %}{% endwith %}</small></span>
+                <i class="conversation-status status-{{ conversation.status }}"></i>
+            </a>
+            {% empty %}<p class="conversation-empty">No support conversations yet.</p>{% endfor %}
+        </aside>
+        <div class="agent-chat-panel">
+            {% if active %}
+            <div class="agent-chat-heading"><div><strong>{% if active.user %}{{ active.user.username }}{% else %}Guest shopper{% endif %}</strong><small>{{ active.subject }} · {{ active.get_status_display }}</small></div><form method="post" action="{% url 'support:close' active.id %}">{% csrf_token %}<button><i class="bi bi-check2-circle"></i> Close</button></form></div>
+            <div class="agent-message-list">
+                {% for message in active.messages.all %}
+                <div class="agent-inbox-message message-{{ message.sender }}"><strong>{{ message.get_sender_display }}</strong><p>{{ message.body }}</p><small>{{ message.created_at|date:"d M, h:i A" }}</small></div>
+                {% empty %}<p>No messages yet.</p>{% endfor %}
+            </div>
+            <form class="agent-reply-form" method="post" action="{% url 'support:agent_reply' active.id %}">{% csrf_token %}<textarea name="message" maxlength="1200" required placeholder="Write a helpful reply..."></textarea><button><i class="bi bi-send"></i> Send reply</button></form>
+            {% else %}
+            <div class="empty-state"><i class="bi bi-chat-dots"></i><h2>No conversation selected</h2><p>New customer messages will appear here.</p></div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,4 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section-space"><div class="container"><div class="empty-state"><i class="bi bi-bag-x"></i><h2>Your cart is empty</h2><p>Add products before opening checkout.</p><a href="{% url 'store:product_list' %}">Browse products</a></div></div></section>
+{% endblock %}

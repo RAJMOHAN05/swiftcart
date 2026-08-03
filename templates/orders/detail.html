@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order.id }} | SwiftCart{% endblock %}
+{% block content %}
+<section class="page-hero compact">
+    <div class="container order-hero-row">
+        <div><span class="section-kicker">Live order tracking</span><h1>Order #{{ order.id }}</h1><p>Tracking ID: <strong>{{ order.tracking_number }}</strong> · Placed {{ order.created_at|date:"d M Y, h:i A" }}</p></div>
+        <a class="invoice-download-button" href="{% url 'orders:invoice_pdf' order.id %}"><i class="bi bi-file-earmark-arrow-down"></i> Download PDF invoice</a>
+    </div>
+</section>
+<section class="section-space">
+<div class="container">
+    {% if order.status == "cancelled" %}
+    <div class="order-cancelled-card"><i class="bi bi-x-circle"></i><div><strong>This order was cancelled</strong><p>Please contact support if you need help with payment or refunds.</p></div></div>
+    {% else %}
+    <div class="tracking-overview">
+        <div><span>Current status</span><strong>{{ order.get_status_display }}</strong></div>
+        <div><span>Estimated delivery</span><strong>{{ order.estimated_delivery|date:"D, d M Y" }}</strong></div>
+        <div><span>Shipping to</span><strong>{{ order.city }}</strong></div>
+    </div>
+    <div class="tracking-timeline">
+        {% for step in timeline %}
+        <div class="timeline-step {% if step.complete %}complete{% endif %} {% if step.current %}current{% endif %}">
+            <div class="timeline-marker"><i class="bi {{ step.icon }}"></i></div>
+            <div class="timeline-copy">
+                <strong>{{ step.label }}</strong>
+                {% if step.event %}<p>{{ step.event.note }}</p><small>{{ step.event.created_at|date:"d M, h:i A" }}{% if step.event.location %} · {{ step.event.location }}{% endif %}</small>{% else %}<p>Waiting for this update</p>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="row g-4 mt-2">
+        <div class="col-lg-8">
+            <div class="dashboard-card">
+                <div class="dashboard-card-heading"><h2>Order items</h2><span class="status-pill status-{{ order.status }}">{{ order.get_status_display }}</span></div>
+                {% for item in order_items %}
+                <div class="checkout-item order-detail-item">
+                    {% if item.product.image_url %}<img src="{{ item.product.image_url }}" alt="{{ item.product.name }}">{% else %}<span>📦</span>{% endif %}
+                    <div><strong><a href="{{ item.product.get_absolute_url }}">{{ item.product.name }}</a></strong><small>₹{{ item.price }} × {{ item.quantity }}</small></div>
+                    <strong>₹{{ item.get_cost }}</strong>
+                    {% if item.can_review %}<a class="order-review-button" href="{{ item.product.get_absolute_url }}#reviews"><i class="bi bi-star"></i> Write review</a>{% elif item.review_submitted %}<span class="order-reviewed-label"><i class="bi bi-check-circle-fill"></i> Reviewed</span>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="order-summary">
+                <h2>Payment summary</h2>
+                <div class="summary-row"><span>Subtotal</span><strong>₹{{ order.subtotal }}</strong></div>
+                <div class="summary-row"><span>Discount</span><strong class="discount-text">− ₹{{ order.discount }}</strong></div>
+                {% if order.coupon_code %}<div class="coupon-success"><i class="bi bi-tag"></i> {{ order.coupon_code }}</div>{% endif %}
+                <div class="summary-total"><span>Total</span><strong>₹{{ order.total }}</strong></div>
+                <hr>
+                <p><strong>Deliver to</strong><br>{{ order.full_name }}<br>{{ order.address }}<br>{{ order.city }} — {{ order.postal_code }}<br>{{ order.phone }}</p>
+                <p class="mb-0"><strong>Payment</strong><br>{{ order.get_payment_method_display }}{% if order.transaction_reference %}<br><small>Reference: {{ order.transaction_reference }}</small>{% endif %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+</section>
+{% endblock %}
